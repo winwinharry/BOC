@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true">
+
+    <LinearLayout
+        android:id="@+id/main"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="#ffffff"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="0.1"
+                android:text=" IP:" />
+
+            <EditText
+                android:id="@+id/iptext"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="0.6"
+                android:imeOptions="actionDone"
+                android:text="192.168.5.12" />
+
+            <Button
+                android:id="@+id/okBtn"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_gravity="right"
+                android:layout_weight="0.15"
+                android:text="OK"
+                android:textSize="10dp" />
+
+            <Button
+                android:id="@+id/offBtn"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_gravity="right"
+                android:layout_weight="0.15"
+                android:enabled="false"
+                android:text="X"
+                android:textSize="10dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:background="#ffffff"
+                android:text=" Status: "
+                android:textColor="#000000"
+                android:textSize="18dp" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/connected_layout"
+            android:layout_width="match_parent"
+            android:visibility="invisible"
+            android:orientation="vertical"
+            android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/langBtnCan"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_margin="10px"
+                android:layout_weight="0.25"
+                android:background="#555555"
+                android:text="  繁  "
+                android:textColor="#f9f93d"
+                android:textSize="20dp" />
+            <Button
+                android:id="@+id/langBtnCn"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_margin="10px"
+                android:layout_weight="0.25"
+                android:background="#555555"
+                android:text="  簡  "
+                android:textColor="#f9f93d"
+                android:textSize="20dp" />
+            <Button
+                android:id="@+id/langBtnEng"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_margin="10px"
+                android:layout_weight="0.25"
+                android:background="#555555"
+                android:text="  ENG  "
+                android:textColor="#f9f93d"
+                android:textSize="20dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:orientation="horizontal">
+
+
+            <!--Button
+                android:id="@+id/loopBtn"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="0.2"
+                android:background="#333333"
+                android:text="Loop"
+                android:textColor="#f9f93d"
+                android:textSize="20dp" /-->
+
+            <Button
+                android:id="@+id/pauseBtn"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_margin="10px"
+                android:layout_weight="0.25"
+                android:background="#222222"
+                android:text="暫停"
+                android:textColor="#f9f93d"
+                android:textSize="20dp" />
+
+            <Button
+                android:id="@+id/sitBtn"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_margin="10px"
+                android:layout_weight="0.25"
+                android:background="#111111"
+                android:text="坐"
+                android:textColor="#f9f93d"
+                android:textSize="20dp" />
+
+            <Button
+                android:id="@+id/standBtn"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_margin="10px"
+                android:layout_weight="0.25"
+                android:background="#000000"
+                android:text="站"
+                android:textColor="#f9f93d"
+                android:textSize="20dp" />
+
+        </LinearLayout>
+
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:orientation="horizontal">
+
+
+            <TextView
+                android:id="@+id/volText"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="0.25"
+                android:background="#ffffff"
+                android:text=" Volume:"
+                android:textAlignment="center"
+
+                android:textColor="#000000"
+                android:textSize="15dp" />
+
+            <Button
+                android:id="@+id/softerBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.25"
+                android:background="#aaaaaa"
+                android:text="-"
+                android:textColor="#f9f93d"
+                android:textSize="25dp" />
+
+            <Button
+                android:id="@+id/louderBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="10px"
+                android:layout_weight="0.25"
+                android:background="#666666"
+                android:text="+"
+                android:textColor="#f9f93d"
+                android:textSize="25dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="200px"
+
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dip"
+                android:layout_weight="0.5"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/funmotionBtn"
+                    android:layout_width="0dip"
+                    android:layout_height="match_parent"
+                    android:layout_margin="10px"
+                    android:layout_weight="0.5"
+                    android:background="#444444"
+                    android:text="趣怪動作"
+                    android:textColor="#f9f93d"
+                    android:textSize="30px" />
+
+                <Button
+                    android:id="@+id/eduBtn"
+                    android:layout_width="0dip"
+                    android:layout_height="match_parent"
+                    android:layout_margin="10px"
+                    android:layout_weight="0.5"
+                    android:background="#444444"
+                    android:text="教育資訊"
+                    android:textColor="#f9f93d"
+                    android:textSize="30px" />
+
+                <Button
+                    android:id="@+id/newBtn"
+                    android:layout_width="0dip"
+                    android:layout_height="match_parent"
+                    android:layout_margin="10px"
+                    android:layout_weight="0.5"
+                    android:background="#444444"
+                    android:text="最新消息"
+                    android:textColor="#f9f93d"
+                    android:textSize="30px" />
+
+                <Button
+                    android:id="@+id/gameBtn"
+                    android:layout_width="0dip"
+                    android:layout_height="match_parent"
+                    android:layout_margin="10px"
+                    android:layout_weight="0.5"
+                    android:background="#444444"
+                    android:text="互動遊戲"
+                    android:textColor="#f9f93d"
+                    android:textSize="30px" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <ExpandableListView
+            android:id="@+id/lvExp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10px"
+            android:layout_marginRight="10px"
+            android:background="#DDDDDD" />
+
+            </LinearLayout>
+
+    </LinearLayout>
+
+
+
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</FrameLayout>
+
+

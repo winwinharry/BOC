@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dip"
+            android:layout_above="@+id/linearLayout"
+            android:layout_alignParentTop="true"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="0.5"
+            android:orientation="horizontal"
+            android:weightSum="1"
+            android:background="#000000">
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="1+1=?"
+                android:textSize="50dp"
+                android:textColor="#f9f93d"
+                android:textAlignment="center"
+                android:gravity="center_vertical"
+                android:autoText="false"
+                android:background="#000000" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:layout_height="0dip"
+            android:layout_weight="0.5"
+            android:background="#000000">
+
+            <LinearLayout
+                android:id="@+id/linearLayout"
+                android:layout_width="match_parent"
+                android:layout_height="0dip"
+                android:layout_weight="0.5"
+                android:layout_above="@+id/linearLayout2"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/button1"
+                    android:layout_width="0dip"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0.5"
+                    android:gravity="center"
+                    android:textSize="40dp"
+                    android:text="A"
+                    android:background="#f69393"
+                    android:layout_margin="20px" />
+
+                <Button
+                    android:id="@+id/button2"
+                    android:layout_width="0dip"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_weight="0.5"
+                    android:textSize="40dp"
+                    android:text="B"
+                    android:background="#898bff"
+                    android:layout_margin="20px" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_weight="0.5"
+                android:orientation="horizontal"
+                android:layout_height="0dip"
+                android:background="#000000">
+
+                <Button
+                    android:id="@+id/button3"
+                    android:layout_width="0dip"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0.5"
+                    android:textSize="40dp"
+                    android:gravity="center"
+                    android:text="C"
+                    android:background="#fff876"
+                    android:layout_margin="20px"
+                    />
+
+                <Button
+                    android:id="@+id/button4"
+                    android:layout_width="0dip"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_weight="0.5"
+                    android:textSize="40dp"
+                    android:text="D"
+                    android:background="#52ff75"
+                    android:layout_margin="20px" />
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+
+
+</RelativeLayout>
