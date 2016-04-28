@@ -1,18 +1,13 @@
 package com.sinocham.harry.expandablelist;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
@@ -26,23 +21,23 @@ import com.aldebaran.qi.Session;
 import com.aldebaran.qi.helper.EventCallback;
 import com.aldebaran.qi.helper.proxies.ALAnimatedSpeech;
 import com.aldebaran.qi.helper.proxies.ALAudioDevice;
+import com.aldebaran.qi.helper.proxies.ALAutonomousMoves;
 import com.aldebaran.qi.helper.proxies.ALBehaviorManager;
 import com.aldebaran.qi.helper.proxies.ALDiagnosis;
+import com.aldebaran.qi.helper.proxies.ALFaceDetection;
+import com.aldebaran.qi.helper.proxies.ALLeds;
 import com.aldebaran.qi.helper.proxies.ALMemory;
 import com.aldebaran.qi.helper.proxies.ALMotion;
+import com.aldebaran.qi.helper.proxies.ALRobotPosture;
 import com.aldebaran.qi.helper.proxies.ALSensors;
 import com.aldebaran.qi.helper.proxies.ALSpeechRecognition;
 import com.aldebaran.qi.helper.proxies.ALTextToSpeech;
-import com.aldebaran.qi.helper.proxies.ALRobotPosture;
-import com.aldebaran.qi.helper.proxies.ALAutonomousMoves;
-import com.aldebaran.qi.helper.proxies.ALFaceDetection;
-import com.aldebaran.qi.helper.proxies.ALLeds;
 import com.aldebaran.qi.helper.proxies.ALTouch;
 
-
-import android.view.inputmethod.InputMethodManager;
-
-import java.lang.Object;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import de.greenrobot.event.EventBus;
 
@@ -68,13 +63,14 @@ public class MainActivity extends AppCompatActivity {
     ALSensors alSensors;
 
     private GameFragment gameFragment;
-
+    private QuestionnaireFragment questionnaireFragment;
     public Session session;
 
     private ProgressDialog loading;
     private Button langBtnCan;
     private Button langBtnCn;
     private Button langBtnEng;
+    private Button mainMenuBtn;
     private Button pauseBtn;
     private Button okBtn;
     private EditText iptext;
@@ -87,6 +83,8 @@ public class MainActivity extends AppCompatActivity {
     private Button eduBtn;
     private Button funMotionBtn;
     private Button gameBtn;
+    private Button questBtn;
+
     private TextView statusText;
     private LinearLayout connectedLayout;
     public boolean speechLoopEnable;
@@ -96,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean isInterrupt = false;
     public List<String> abc = new ArrayList<String>();
-    public List<String> abcd = new ArrayList<String>();
 //    private Handler handler;
 //    private Runnable runnable;
 //    public String lastFaces = "[]";
@@ -105,12 +102,16 @@ public class MainActivity extends AppCompatActivity {
 //    public int shortLeaveTime = 5;
 //    public boolean noPeopleTimeEnable = false;
 
-    public Object lockForStopAll;
+    public Object lockForStopAll = new Object();
+    public Object lockForTouch = new Object();
 
+    public boolean touchIsInProgress = false;
 
     private int touchCounter = 0; //counter for touch
     private int touchBackCounter = 0; //counter for touch
 
+    public final static int DO_QUESTIONNAIRE = 3;
+    public final static int YES_NO_QUESTION = 4;
     public final static int COMMAND = 2;
     public final static int PLAY_GAMES = 1;
     public final static int LANGUAGE = 0;
@@ -118,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
     public final static int SERVICES_EDUCATION = 1;
     public final static int SERVICES_NEWS = 2;
     public final static int SERVICES_FUN = 0;
+
 
     public final static int LANGUAGE_CANTONESE = 0;
     public final static int LANGUAGE_CHINESE = 1;
@@ -132,7 +134,6 @@ public class MainActivity extends AppCompatActivity {
         protected Boolean doInBackground(String... params) {
 
             Application.getmInstance().saveIp(params[0]);
-
             try {
                 session = new Session();
                 session.connect("tcp://" + params[0] + ":9559").sync(1000, TimeUnit.MILLISECONDS);
@@ -167,10 +168,11 @@ public class MainActivity extends AppCompatActivity {
                 alMemory = new ALMemory(session);
                 alDiagnosis = new ALDiagnosis(session);
                 alDiagnosis.setEnableNotification(false);
-
+                alSpeechRecognition.setAudioExpression(false);
+                alSpeechRecognition.setVisualExpression(true);
 //                alSpeechRecognition.setAudioExpression(false);
-                aLAutonomousMoves.setExpressiveListeningEnabled(false);
-                aLAutonomousMoves.setBackgroundStrategy("none");
+                aLAutonomousMoves.setExpressiveListeningEnabled(true);
+//                aLAutonomousMoves.setBackgroundStrategy("none");
 
                 alSensors = new ALSensors(session);
 
@@ -241,19 +243,14 @@ public class MainActivity extends AppCompatActivity {
         eduBtn = (Button) findViewById(R.id.eduBtn);
         funMotionBtn = (Button) findViewById(R.id.funmotionBtn);
         gameBtn = (Button) findViewById(R.id.gameBtn);
+        questBtn = (Button) findViewById(R.id.questBtn);
+        mainMenuBtn = (Button) findViewById(R.id.mainMenuBtn);
 
-
-        abcd.add("a");
-        abcd.add("b");
-        abcd.add("c");
-        abcd.add("d");
-        abc.add("a");
-        abc.add("b");
-        abc.add("c");
         iptext.setText(Application.getmInstance().loadIp());
         expListView = (ExpandableListView) findViewById(R.id.lvExp);
 
         loading = null;
+
 
 //        startPollingThread();
         // preparing list data
@@ -282,33 +279,34 @@ public class MainActivity extends AppCompatActivity {
 
                                 try {
                                     stopAll();
-                                    changeLanguage(MainActivity.LANGUAGE_ENGLISH, false, false, false);
-                                    sayText("mobile disconnected", SayCallBackEvent.AFTER_COMMON_LANGUAGE, false);
                                     alMemory.unsubscribeToEvent(Application.getmInstance().loadHeadMiddleTouch());
                                     alMemory.unsubscribeToEvent(Application.getmInstance().loadHeadBackTouch());
-
+                                    alMotion.rest();
                                     Application.getmInstance().saveHeadMiddleTouch(0);
                                     Application.getmInstance().saveHeadBackTouch(0);
-
+                                    changeLanguage(MainActivity.LANGUAGE_ENGLISH, false, false, true);
+//                                    sayText("mobile disconnected", SayCallBackEvent.AFTER_COMMON_LANGUAGE, false);
+                                    alTextToSpeech.say("mobile disconnected");
                                 } catch (CallError callError) {
-                                    callError.printStackTrace();
+                                    Log.d(Application.TAG, "Session already closed, un run command can be ignored");
+//                                    callError.printStackTrace();
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
-
-                                try {
-                                    session.close();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                } finally {
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            statusText.setText("status: robot disconnected");
-                                            okBtn.setEnabled(true);
-                                        }
-                                    });
-                                }
+                                EventBus.getDefault().post(new CloseAllThenCloseSession());
+//                                try {
+//                                    session.close();
+//                                } catch (Exception e) {
+//                                    e.printStackTrace();
+//                                } finally {
+//                                    runOnUiThread(new Runnable() {
+//                                        @Override
+//                                        public void run() {
+//                                            statusText.setText("status: robot disconnected");
+//                                            okBtn.setEnabled(true);
+//                                        }
+//                                    });
+//                                }
                             }
                         }).start();
 
@@ -445,7 +443,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
+        questBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                if (session.isConnected()) {
+                enterQuestionnaire();
+//                }
+            }
+        });
         okBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -522,13 +527,18 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
+        mainMenuBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stopAll();
+                askServices(Application.getmInstance().loadLanguage());
+            }
+        });
 
         pauseBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 stopAll();
-                askServices(Application.getmInstance().loadLanguage());
             }
         });
 
@@ -595,9 +605,9 @@ public class MainActivity extends AppCompatActivity {
         try {
 
             if (language == MainActivity.LANGUAGE_CANTONESE) {
-
+                Log.d(Application.TAG, "NAO正在轉用廣東話");
                 if (isShowProgressDialog) {
-                    showProgressDialog("NAO正在轉語言");
+                    showProgressDialog("NAO正在轉用廣東話");
                 }
 
                 alTextToSpeech.setLanguage("CantoneseHK");
@@ -607,12 +617,14 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            mainMenuBtn.setText("主頁");
                             pauseBtn.setText("暫停");
                             sitBtn.setText("坐");
                             standBtn.setText("站");
                             gameBtn.setText("互動遊戲");
                             newsBtn.setText("最新消息");
                             eduBtn.setText("教育資訊");
+                            questBtn.setText("問卷調查");
                             funMotionBtn.setText("趣怪動作");
                             upadateListData(language);
                         }
@@ -620,9 +632,9 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             } else if (language == MainActivity.LANGUAGE_CHINESE) {
-
+                Log.d(Application.TAG, "NAO正在轉用普通話");
                 if (isShowProgressDialog) {
-                    showProgressDialog("NAO正在轉語言");
+                    showProgressDialog("NAO正在轉用普通話");
                 }
 
                 alTextToSpeech.setLanguage("Chinese");
@@ -632,12 +644,14 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            mainMenuBtn.setText("主頁");
                             pauseBtn.setText("暂停");
                             sitBtn.setText("坐");
                             standBtn.setText("站");
                             gameBtn.setText("互动游戏");
                             newsBtn.setText("最新消息");
                             eduBtn.setText("教育资讯");
+                            questBtn.setText("问卷调查");
                             funMotionBtn.setText("趣怪动作");
                             upadateListData(language);
                         }
@@ -646,19 +660,19 @@ public class MainActivity extends AppCompatActivity {
 
 
             } else if (language == MainActivity.LANGUAGE_ENGLISH) {
-
-
+                Log.d(Application.TAG, "NAO is using English");
                 if (isShowProgressDialog) {
-                    showProgressDialog("NAO is changing language");
+                    showProgressDialog("NAO is using English");
                 }
 
                 alTextToSpeech.setLanguage("English");
-                alTextToSpeech.setParameter("speed", 70f);
+                alTextToSpeech.setParameter("speed", 90f);
 
                 if (isUILanguageChange) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            mainMenuBtn.setText("Home");
                             pauseBtn.setText("Pause");
 //                                        sitBtn.setText(getResources().getString(R.string.sit));
                             sitBtn.setText("Sit");
@@ -666,6 +680,7 @@ public class MainActivity extends AppCompatActivity {
                             gameBtn.setText("GAMES");
                             newsBtn.setText("NEWS");
                             eduBtn.setText("EDUCATION");
+                            questBtn.setText("QUESTIONNAIRE");
                             funMotionBtn.setText("FUN MOTIONS");
                             upadateListData(language);
                         }
@@ -673,8 +688,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            alSpeechRecognition.setAudioExpression(false);
-            alSpeechRecognition.setVisualExpression(false);
 
         } catch (CallError callError) {
             callError.printStackTrace();
@@ -702,7 +715,10 @@ public class MainActivity extends AppCompatActivity {
                         final String a = Application.speech.get(services).get(Application.getmInstance().loadLanguage())[j];
                         try {
                             if (speechLoopEnable) {
-                                alTextToSpeech.say(a);
+                                if (services == MainActivity.SERVICES_FUN) {
+                                    changeLanguage(MainActivity.LANGUAGE_ENGLISH, false, false, false);
+                                }
+                                alAnimatedSpeech.say(a);
                                 if (services == MainActivity.SERVICES_FUN) {
                                     alBehaviorManager.runBehavior("boc/" + a);
                                 }
@@ -745,15 +761,46 @@ public class MainActivity extends AppCompatActivity {
         gameFragment = null;
     }
 
+    public void enterQuestionnaire() {
+
+        showProgressDialog("Loading quesetionnaire");
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                stopAll();
+                changeLanguage((int) Application.getmInstance().loadLanguage(), false, false, true);
+                questionnaireFragment = QuestionnaireFragment.newInstance();
+                questionnaireFragment.show(getSupportFragmentManager(), "question");
+                dismissProgressDialog();
+            }
+        }).start();
+    }
+
+    public void exitQuestFragment() {
+        stopAll();
+        isInterrupt = true;
+//      questionnaireFragment.stopCounter();
+        questionnaireFragment.dismiss();
+        questionnaireFragment = null;
+    }
+
     @Override
     public void onBackPressed() {
 
         if (gameFragment != null) {
             exitGameFragment();
             askServices(Application.getmInstance().loadLanguage());
-        } else {
+            return;
+        }
+        if (questionnaireFragment != null) {
+            exitQuestFragment();
+            askServices(Application.getmInstance().loadLanguage());
 
-            System.out.println("game fragment is null");
+        }
+        if (gameFragment == null && questionnaireFragment == null) {
+
+            System.out.println("game questionnaireFragment is null");
 
             super.onBackPressed();
         }
@@ -911,9 +958,15 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onEvent(Object o) throws InterruptedException, CallError {
 
-                    touchCounter++;
+                    synchronized (lockForTouch) {
 
-                    if (touchCounter == 1) {
+                        Log.d(Application.TAG, "onEvent: touch: " + touchIsInProgress);
+
+                        if (touchIsInProgress) {
+                            return;
+                        } else {
+                            touchIsInProgress = true;
+                        }
 
                         if (loading != null) {
                             Log.d(Application.TAG, "onEvent: load is not null");
@@ -925,12 +978,12 @@ public class MainActivity extends AppCompatActivity {
                         if (gameFragment != null) {
                             exitGameFragment();
                         }
-
+                        if (questionnaireFragment != null) {
+                            exitQuestFragment();
+                        }
                         if (!isPlayingMenu) {
                             askServices(Application.getmInstance().loadLanguage());
                         }
-                    } else {
-                        touchCounter = 0;
                     }
                 }
             });
@@ -964,10 +1017,15 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onEvent(Object o) throws InterruptedException, CallError {
 
-                    touchBackCounter++;
-                    if (touchBackCounter == 1) {
+                    synchronized (lockForTouch) {
 
-                        checkFlag("subscribeRightBumper()");
+                        Log.d(Application.TAG, "onEvent: touch: " + touchIsInProgress);
+
+                        if (touchIsInProgress) {
+                            return;
+                        } else {
+                            touchIsInProgress = true;
+                        }
 
                         if (loading != null) {
                             Log.d(Application.TAG, "onEvent: loading is not null");
@@ -979,14 +1037,14 @@ public class MainActivity extends AppCompatActivity {
                         if (gameFragment != null) {
                             exitGameFragment();
                         }
-
+                        if (questionnaireFragment != null) {
+                            exitQuestFragment();
+                        }
                         if (!isPlayingMenu) {
                             askLanguage();
                         }
-
-                    } else {
-                        touchBackCounter = 0;
                     }
+
                 }
             });
 
@@ -1131,7 +1189,6 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-
                 stopAll();
                 isPlayingMenu = true;
                 speechLoopEnable = true;
@@ -1142,24 +1199,25 @@ public class MainActivity extends AppCompatActivity {
                                 changeLanguage(MainActivity.LANGUAGE_CANTONESE, false, false, false);
                                 break;
                             case 1:
-                                sayText("你好， 選擇廣東話.請說.A.", SayCallBackEvent.AFTER_COMMON_LANGUAGE, true);
+                                sayTextAnimated("你好， 選擇廣東話.請說.A.", SayCallBackEvent.AFTER_COMMON_LANGUAGE, true);
                                 break;
                             case 2:
                                 changeLanguage(MainActivity.LANGUAGE_CHINESE, false, false, false);
                                 break;
                             case 3:
-                                sayText("你好， 選擇普通话.請說.B.", SayCallBackEvent.AFTER_COMMON_LANGUAGE, true);
+                                sayTextAnimated("你好， 選擇普通话.請說.B.", SayCallBackEvent.AFTER_COMMON_LANGUAGE, true);
                                 break;
                             case 4:
                                 changeLanguage(MainActivity.LANGUAGE_ENGLISH, false, false, false);
                                 break;
                             case 5:
-                                sayText("Hello. Use English. please say.C.", SayCallBackEvent.AFTER_COMMON_LANGUAGE, true);
+                                sayTextAnimated("Hello. Use English. please say.C.", SayCallBackEvent.AFTER_COMMON_LANGUAGE, true);
                                 break;
                         }
                     }
                 }
 
+                touchIsInProgress = false;
                 subscribeASR(MainActivity.LANGUAGE, "askLanguage");
                 EventBus.getDefault().post(new SayCallBackEvent(SayCallBackEvent.AFTER_CHOOSEN_LANGUAGE));
                 EventBus.getDefault().post(new PlayingMenuEvent(false));
@@ -1185,7 +1243,7 @@ public class MainActivity extends AppCompatActivity {
                                         changeLanguage(MainActivity.LANGUAGE_CANTONESE, false, false, false);
                                         break;
                                     case 1:
-                                        sayText(Constant.startSpeech[0], SayCallBackEvent.AFTER_SERVICE_SPEECH, true);
+                                        sayTextAnimated(Constant.startSpeech[0], SayCallBackEvent.AFTER_SERVICE_SPEECH, true);
                                         break;
                                 }
                             }
@@ -1201,7 +1259,7 @@ public class MainActivity extends AppCompatActivity {
                                         break;
                                     case 1:
 
-                                        sayText(Constant.startSpeechCn[0], SayCallBackEvent.AFTER_SERVICE_SPEECH, true);
+                                        sayTextAnimated(Constant.startSpeechCn[0], SayCallBackEvent.AFTER_SERVICE_SPEECH, true);
                                         break;
                                 }
                             }
@@ -1212,18 +1270,18 @@ public class MainActivity extends AppCompatActivity {
                             if (speechLoopEnable) {
                                 switch (j) {
                                     case 0:
-                                        changeLanguage(MainActivity.LANGUAGE_CANTONESE, false, false, false);
+                                        changeLanguage(MainActivity.LANGUAGE_ENGLISH, false, false, false);
 
                                         break;
                                     case 1:
-                                        sayText(Constant.startSpeechEng[0], SayCallBackEvent.AFTER_SERVICE_SPEECH, true);
+                                        sayTextAnimated(Constant.startSpeechEng[0], SayCallBackEvent.AFTER_SERVICE_SPEECH, true);
                                         break;
                                 }
                             }
                         }
-
                     }
 
+                    touchIsInProgress = false;
                     EventBus.getDefault().post(new PlayingMenuEvent(false));
 
                 } catch (Exception ex) {
@@ -1285,7 +1343,7 @@ public class MainActivity extends AppCompatActivity {
     public void sayText(final String text, final int callbackType, boolean isBlock) {
 
         setPlayingSpeech(true, "sayText()");
-//        playingSpeech = true;
+//      playingSpeech = true;
 
         try {
 
@@ -1362,7 +1420,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void blockingAction(final int action) {
-
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -1407,6 +1464,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void onEvent(CloseAllThenCloseSession event) {
+
+        try {
+            session.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    statusText.setText("status: robot disconnected");
+                    okBtn.setEnabled(true);
+                }
+            });
+        }
+    }
+
     public void subscribeASR(final int action, String location) {
 
         synchronized (lockForStopAll) {
@@ -1421,12 +1495,54 @@ public class MainActivity extends AppCompatActivity {
             Log.d(Application.TAG, "subscribeASR: " + "starting subscribe after unsubscribe asr");
 
             try {
-
-                if (action == MainActivity.LANGUAGE) {
-                    alSpeechRecognition.setVocabulary(abc, false);
-                } else if (action == MainActivity.COMMAND || action == MainActivity.PLAY_GAMES) {
-                    alSpeechRecognition.setVocabulary(abcd, false);
+                int choiceNum = 0;
+                if (action == MainActivity.YES_NO_QUESTION) {
+                    choiceNum = 2;
+                } else if (action == MainActivity.LANGUAGE) {
+                    choiceNum = 3;
+                } else if (action == MainActivity.COMMAND) {
+                    choiceNum = 5;
+                } else if (action == MainActivity.PLAY_GAMES) {
+                    choiceNum = 4;
                 }
+                abc.clear();
+                for (int k = 1; k <= choiceNum; k++) {
+                    switch (k) {
+                        case 1:
+                            abc.add("a");
+                            break;
+                        case 2:
+                            abc.add("b");
+                            break;
+                        case 3:
+                            abc.add("c");
+                            break;
+                        case 4:
+                            abc.add("d");
+                            break;
+                        case 5:
+                            abc.add("e");
+                            break;
+                        case 6:
+                            abc.add("f");
+                            break;
+                        case 7:
+                            abc.add("g");
+                            break;
+                        case 8:
+                            abc.add("h");
+                            break;
+                        case 9:
+                            abc.add("i");
+                            break;
+                        case 10:
+                            abc.add("j");
+                            break;
+                    }
+                }
+                Log.d(Application.TAG, "subscribeASR: listen to"+ abc);
+                alSpeechRecognition.setVocabulary(abc, false);
+
                 alSpeechRecognition.subscribe("Main_ASR", 1000, 0.0f);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -1500,7 +1616,7 @@ public class MainActivity extends AppCompatActivity {
                             } else if (action == MainActivity.COMMAND) {
                                 switch (receivedText) {
                                     case "a":
-                                        robotService(MainActivity.SERVICES_EDUCATION);
+                                        enterQuestionnaire();
                                         break;
                                     case "b":
                                         robotService(MainActivity.SERVICES_NEWS);
@@ -1510,6 +1626,235 @@ public class MainActivity extends AppCompatActivity {
                                         break;
                                     case "d":
                                         robotService(MainActivity.SERVICES_FUN);
+                                        break;
+                                    case "e":
+                                        robotService(MainActivity.SERVICES_EDUCATION);
+                                        break;
+                                }
+                            } else if (action == MainActivity.YES_NO_QUESTION) {
+                                switch (receivedText) {
+                                    case "a":
+                                        EventBus.getDefault().post(new TrueFalseAnswer(true));
+                                        break;
+                                    case "b":
+                                        EventBus.getDefault().post(new TrueFalseAnswer(false));
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                });
+
+                Application.getmInstance().saveASRId(asrid);
+
+
+                //putting up the hand for listening
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        puttingUpHand();
+                    }
+                }).start();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    public void subscribeASR(final int action, String location, int questionQID) {
+
+        synchronized (lockForStopAll) {
+
+
+            Log.d(Application.TAG, "subscribeASR: Start subscribe processess from location: " + location);
+
+            Log.d(Application.TAG, "subscribeASR: unSubscribe the ASR for safety");
+
+            unSubcribeASR("subscribeASR");
+
+            Log.d(Application.TAG, "subscribeASR: " + "starting subscribe after unsubscribe asr");
+
+            try {
+                int choiceNum = 0;
+                if (action == MainActivity.YES_NO_QUESTION) {
+                    choiceNum = 2;
+                } else if (action == MainActivity.LANGUAGE) {
+                    choiceNum = 3;
+                } else if (action == MainActivity.COMMAND) {
+                    choiceNum = 5;
+                } else if (action == MainActivity.PLAY_GAMES) {
+                    choiceNum = 4;
+                } else if (action == MainActivity.DO_QUESTIONNAIRE) {
+                    choiceNum = Application.questionCN.get(questionQID).length - 1;
+                }
+                abc.clear();
+                for (int k = 1; k <= choiceNum; k++) {
+                    switch (k) {
+                        case 1:
+                            abc.add("a");
+                            break;
+                        case 2:
+                            abc.add("b");
+                            break;
+                        case 3:
+                            abc.add("c");
+                            break;
+                        case 4:
+                            abc.add("d");
+                            break;
+                        case 5:
+                            abc.add("e");
+                            break;
+                        case 6:
+                            abc.add("f");
+                            break;
+                        case 7:
+                            abc.add("g");
+                            break;
+                        case 8:
+                            abc.add("h");
+                            break;
+                        case 9:
+                            abc.add("i");
+                            break;
+                        case 10:
+                            abc.add("j");
+                            break;
+                    }
+                }
+                Log.d(Application.TAG, "subscribeASR choiceNum: " + choiceNum);
+                alSpeechRecognition.setVocabulary(abc, false);
+                alSpeechRecognition.subscribe("Main_ASR", 1000, 0.0f);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (CallError callError) {
+                callError.printStackTrace();
+            }
+
+            try {
+
+                long asrid = alMemory.subscribeToEvent("WordRecognized", new EventCallback() {
+
+                    @Override
+                    public void onEvent(Object o) throws InterruptedException, CallError {
+
+                        Log.d(Application.TAG, "onEvent: " + o.toString());
+                        Log.d(Application.TAG, "onEvent: " + alMemory.getData("WordRecognized"));
+                        ArrayList a = (ArrayList) (alMemory.getData("WordRecognized"));
+
+                        String receivedText = a.get(0).toString();
+                        Float confident = Float.parseFloat(a.get(1).toString());
+
+                        if (confident >= 0.4f) {
+
+                            unSubcribeASR("subscribeASR");
+
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        alRobotPosture.goToPosture("Stand", 0.6f);
+                                    } catch (CallError callError) {
+                                        callError.printStackTrace();
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }).start();
+
+                            //alTextToSpeech.say(receivedText);
+
+                            if (action == MainActivity.LANGUAGE) {
+                                switch (receivedText) {
+                                    case "a":
+                                        changeLanguage(MainActivity.LANGUAGE_CANTONESE, true, true, true);
+                                        sayText("你選擇廣東話...", SayCallBackEvent.CHOSEN_LANGUAGE, true);
+                                        break;
+                                    case "b":
+                                        changeLanguage(MainActivity.LANGUAGE_CHINESE, true, true, true);
+                                        sayText("你選擇普通话...", SayCallBackEvent.CHOSEN_LANGUAGE, true);
+                                        break;
+                                    case "c":
+                                        changeLanguage(MainActivity.LANGUAGE_ENGLISH, true, true, true);
+                                        sayText("You have chosen English...", SayCallBackEvent.CHOSEN_LANGUAGE, true);
+                                        break;
+                                }
+                            } else if (action == MainActivity.PLAY_GAMES) {
+                                switch (receivedText) {
+                                    case "a":
+                                        EventBus.getDefault().post(new ChooseAnswer(0));
+                                        break;
+                                    case "b":
+                                        EventBus.getDefault().post(new ChooseAnswer(1));
+                                        break;
+                                    case "c":
+                                        EventBus.getDefault().post(new ChooseAnswer(2));
+                                        break;
+                                    case "d":
+                                        EventBus.getDefault().post(new ChooseAnswer(3));
+                                        break;
+                                }
+                            } else if (action == MainActivity.COMMAND) {
+                                switch (receivedText) {
+                                    case "a":
+                                        enterQuestionnaire();
+                                        break;
+                                    case "b":
+                                        robotService(MainActivity.SERVICES_NEWS);
+                                        break;
+                                    case "c":
+                                        enterGame();
+                                        break;
+                                    case "d":
+                                        robotService(MainActivity.SERVICES_FUN);
+                                        break;
+                                    case "e":
+                                        robotService(MainActivity.SERVICES_EDUCATION);
+                                        break;
+                                }
+                            } else if (action == MainActivity.DO_QUESTIONNAIRE) {
+                                switch (receivedText) {
+                                    case "a":
+                                        EventBus.getDefault().post(new ChooseChoice(0));
+                                        break;
+                                    case "b":
+                                        EventBus.getDefault().post(new ChooseChoice(1));
+                                        break;
+                                    case "c":
+                                        EventBus.getDefault().post(new ChooseChoice(2));
+                                        break;
+                                    case "d":
+                                        EventBus.getDefault().post(new ChooseChoice(3));
+                                        break;
+                                    case "e":
+                                        EventBus.getDefault().post(new ChooseChoice(4));
+                                        break;
+                                    case "f":
+                                        EventBus.getDefault().post(new ChooseChoice(5));
+                                        break;
+                                    case "g":
+                                        EventBus.getDefault().post(new ChooseChoice(6));
+                                        break;
+                                    case "h":
+                                        EventBus.getDefault().post(new ChooseChoice(7));
+                                        break;
+                                    case "i":
+                                        EventBus.getDefault().post(new ChooseChoice(8));
+                                        break;
+                                    case "j":
+                                        EventBus.getDefault().post(new ChooseChoice(9));
+                                        break;
+                                }
+                            } else if (action == MainActivity.YES_NO_QUESTION) {
+                                switch (receivedText) {
+                                    case "a":
+                                        EventBus.getDefault().post(new TrueFalseAnswer(true));
+                                        break;
+                                    case "b":
+                                        EventBus.getDefault().post(new TrueFalseAnswer(false));
                                         break;
                                 }
                             }
@@ -1522,7 +1867,13 @@ public class MainActivity extends AppCompatActivity {
 
 
                 //putting up the hand for listening
-                puttingUpHand();
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        puttingUpHand();
+                    }
+                }).start();
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -1534,6 +1885,7 @@ public class MainActivity extends AppCompatActivity {
     public void puttingUpHand() {
         try {
             Log.d(Application.TAG, "puttingUpHand: putting up hand is called");
+            alBehaviorManager.stopAllBehaviors();
             alBehaviorManager.runBehavior("boc/listen");
         } catch (CallError callError) {
             callError.printStackTrace();

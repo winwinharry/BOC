@@ -2,7 +2,6 @@ package com.sinocham.harry.expandablelist;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Point;
 import android.view.Display;
 import android.view.WindowManager;
 
@@ -90,6 +89,10 @@ public class Application extends android.app.Application {
     }
 
 
+    public static ArrayList<String[]> questionCN = new ArrayList<>();
+    public static ArrayList<String[]> questionENG = new ArrayList<>();
+    public static ArrayList<int[]> questionScore = new ArrayList<>();
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -123,5 +126,56 @@ public class Application extends android.app.Application {
         //by david
         settings = getSharedPreferences("setting", Context.MODE_PRIVATE);
 
+        questionCN.add(Constant.q1CN);
+        questionCN.add(Constant.q2CN);
+        questionCN.add(Constant.q3CN);
+        questionCN.add(Constant.q4CN);
+        questionCN.add(Constant.q5CN);
+        questionCN.add(Constant.q6CN);
+        questionCN.add(Constant.q7CN);
+        questionCN.add(Constant.q8CN);
+        questionCN.add(Constant.q9CN);
+        questionCN.add(Constant.q10CN);
+        questionCN.add(Constant.q11CN);
+        questionCN.add(Constant.q12CN);
+        questionCN.add(Constant.q13CN);
+        questionCN.add(Constant.q14CN);
+        questionCN.add(Constant.q15CN);
+        questionCN.add(Constant.q16CN);
+        questionCN.add(Constant.q17CN);
+        questionENG.add(Constant.q1ENG);
+        questionENG.add(Constant.q2ENG);
+        questionENG.add(Constant.q3ENG);
+        questionENG.add(Constant.q4ENG);
+        questionENG.add(Constant.q5ENG);
+        questionENG.add(Constant.q6ENG);
+        questionENG.add(Constant.q7ENG);
+        questionENG.add(Constant.q8ENG);
+        questionENG.add(Constant.q9ENG);
+        questionENG.add(Constant.q10ENG);
+        questionENG.add(Constant.q11ENG);
+        questionENG.add(Constant.q12ENG);
+        questionENG.add(Constant.q13ENG);
+        questionENG.add(Constant.q14ENG);
+        questionENG.add(Constant.q15ENG);
+        questionENG.add(Constant.q16ENG);
+        questionENG.add(Constant.q17ENG);
+        questionScore.add(Constant.q1score);
+        questionScore.add(Constant.q2score);
+        questionScore.add(Constant.q3score);
+        questionScore.add(Constant.q4score);
+        questionScore.add(Constant.q5score);
+        questionScore.add(Constant.q6score);
+        questionScore.add(Constant.q7score);
+        questionScore.add(Constant.q8score);
+        questionScore.add(Constant.q9score);
+        questionScore.add(Constant.q10score);
+        questionScore.add(Constant.q11score);
+        questionScore.add(Constant.q12score);
+        questionScore.add(Constant.q13score);
+        questionScore.add(Constant.q14score);
+        questionScore.add(Constant.q15score);
+        questionScore.add(Constant.q16score);
+        questionScore.add(Constant.q17score);
     }
 }

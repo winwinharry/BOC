@@ -3,13 +3,13 @@ package com.sinocham.harry.expandablelist;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.aldebaran.qi.CallError;
@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import de.greenrobot.event.EventBus;
+
+//import android.support.annotation.NonNull;
 
 
 public class GameFragment extends DialogFragment {
@@ -45,7 +47,7 @@ public class GameFragment extends DialogFragment {
     Button buttonB;
     Button buttonC;
     Button buttonD;
-
+    FrameLayout frameLayoutID;
     private Object counterLock; //for counter lock synchronization
     private Thread counterThread; //for counter thread interruption
     private boolean isCounting; //for counter status
@@ -58,12 +60,12 @@ public class GameFragment extends DialogFragment {
     @Override
     public void onStart() {
         super.onStart();
-//        getDialog().getWindow().setLayout(Application.width, Application.height);
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
+        getDialog().getWindow().setLayout(Application.width, Application.height);
         question.add(q1);
         question.add(q2);
         question.add(q3);
@@ -73,6 +75,13 @@ public class GameFragment extends DialogFragment {
         counterThread = new Thread();
 
         view = inflater.inflate(R.layout.game_fragment, container, false);
+
+
+        frameLayoutID = (FrameLayout) view.findViewById(R.id.frameLayoutID);
+        frameLayoutID.setMinimumHeight(Application.height);
+        frameLayoutID.setMinimumWidth(Application.width);
+
+
         questionText = (TextView) view.findViewById(R.id.textView2);
         buttonA = (Button) view.findViewById(R.id.button1);
         buttonB = (Button) view.findViewById(R.id.button2);
@@ -187,9 +196,7 @@ public class GameFragment extends DialogFragment {
                     resultText = question.get(currentQID)[6] + ".   Answer' '. 'A'. " + "'' " + "'" + question.get(currentQID)[1] + "'. '' " + "'B'. '' " + "'" + question.get(currentQID)[2] + "'. '' " + "'c'. '' " + "'" + question.get(currentQID)[3] + "'. '' " + "'d'. '' " + "'" + question.get(currentQID)[4] + "'. '' ";
                     break;
             }
-
             mainActivity.sayText(resultText, SayCallBackEvent.QUESTION_START, false);
-
         } catch (CallError callError) {
             callError.printStackTrace();
         } catch (InterruptedException e) {
@@ -197,7 +204,6 @@ public class GameFragment extends DialogFragment {
         }
     }
 
-    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         return new Dialog(getActivity(), getTheme()) {

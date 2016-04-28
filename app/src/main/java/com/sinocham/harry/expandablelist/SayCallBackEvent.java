@@ -12,6 +12,8 @@ public class SayCallBackEvent {
     public static final int AFTER_SERVICE_SPEECH = 4;
     public static final int AFTER_CHOOSEN_LANGUAGE = 5;
     public static final int AFTER_COMMON_LANGUAGE = 6;
+    public static final int ASK_TRUE_FALSE_QUESTION=7;
+    public static final int TRUE_FALSE_FEEDBACK = 8;
 
     public int event;
 

@@ -4,14 +4,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:descendantFocusability="beforeDescendants"
-    android:focusableInTouchMode="true">
+    android:focusableInTouchMode="true"
+    android:keepScreenOn="true">
 
     <LinearLayout
         android:id="@+id/main"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:background="#ffffff"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:keepScreenOn="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -71,6 +73,7 @@
                 android:text=" Status: "
                 android:textColor="#000000"
                 android:textSize="18dp" />
+
         </LinearLayout>
 
 
@@ -135,7 +138,16 @@
                 android:text="Loop"
                 android:textColor="#f9f93d"
                 android:textSize="20dp" /-->
-
+            <Button
+                android:id="@+id/mainMenuBtn"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_margin="10px"
+                android:layout_weight="0.25"
+                android:background="#222222"
+                android:text="主頁"
+                android:textColor="#f9f93d"
+                android:textSize="20dp" />
             <Button
                 android:id="@+id/pauseBtn"
                 android:layout_width="0dp"
@@ -270,6 +282,17 @@
                     android:text="互動遊戲"
                     android:textColor="#f9f93d"
                     android:textSize="30px" />
+                <Button
+                    android:id="@+id/questBtn"
+                    android:layout_width="0dip"
+                    android:layout_height="match_parent"
+                    android:layout_margin="10px"
+                    android:layout_weight="0.5"
+                    android:background="#444444"
+                    android:text="問卷調查"
+                    android:textColor="#f9f93d"
+                    android:textSize="30px" />
+
             </LinearLayout>
 
         </LinearLayout>
@@ -291,7 +314,8 @@
     <FrameLayout
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:keepScreenOn="true" />
 
 </FrameLayout>
 
